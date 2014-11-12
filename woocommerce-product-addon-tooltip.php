@@ -51,7 +51,7 @@ class WoocommerceAddonTooltip {
 
     private function add_actions() {
         add_action( 'admin_menu', array( &$this, "add_menu" ) );
-        add_action( 'woocommerce_product_write_panels', array( $this, 'panel' ));
+        add_action( 'woocommerce_product_write_panels', array( $this, 'panel' ),20);
         add_action( 'woocommerce_process_product_meta', array( $this, 'process_meta_box'), 2, 2 );
         add_action( 'woocommerce_before_add_to_cart_button', array( $this, 'display' ), 10 );
         //add_action( 'admin_head', array( &$this, 'admin_enqueue_scripts' ) );
@@ -82,8 +82,24 @@ class WoocommerceAddonTooltip {
         if ( is_array( $product_addons_tooltips ) && sizeof( $product_addons_tooltips ) > 0 ) {            
 
             ?>
+      <dl id="addon-tabs" class="tabs vertical" data-tab>        
+      </dl>
+      <div id="addon-tabs-content" class="tabs-content vertical">                
+      </div>
+<div class="clearfix"></div>  
 <style type="text/css">
-    .woocommerce form .product-addon .form-row label{display: inline}
+
+    .woocommerce form #addon-tabs-content .form-row label{display: inline}
+    #addon-tabs{display: none;}
+    #addon-tabs-content > .content{display: block;}
+    @media only screen and (min-width: 40rem){
+        #addon-tabs-content > .content{display: none;}
+        #addon-tabs-content > .content.active{display: block;}
+        #addon-tabs{display: block;}
+        #addon-tabs dd > a{padding:15px 10px;}
+        #addon-tabs.vertical{width: 40%}
+        #addon-tabs-content.vertical{width: 60%;}    
+    }    
     #tooltip
     {
         text-align: center;
@@ -130,12 +146,16 @@ class WoocommerceAddonTooltip {
     }
 </style>
 <script type="text/javascript">
+    //hide all checkbox addons
+    //jQuery('.addon-checkbox').parents('.product-addon');
+
     var product_addons_tooltips  = JSON.parse(<?php echo json_encode(json_encode($product_addons_tooltips,JSON_HEX_APOS))?> );    
     jQuery(function(){
-        jQuery('.product-addon').each(function(i,e){
-            var tooltips = '';
+        jQuery('.product-addon').each(function(i,e){            
 
-            product_addons_tooltips.every(function(ele){
+            //tooltip
+            var tooltips = '';
+            jQuery.each(product_addons_tooltips,function(ii,ele){
                 if(ele.position == i){
                     tooltips = ele.options;
                     return false;
@@ -147,7 +167,16 @@ class WoocommerceAddonTooltip {
                     if(tooltips[ii].tooltip)
                         jQuery(ele).parents('label').attr('rel','tooltip').attr('title',tooltips[ii].tooltip);
                 });
-            }                        
+            } 
+
+            //tab
+            if(jQuery(e).find('input.addon[type="checkbox"]').length){
+                var title = jQuery(e).find('h3').html();
+                var content = jQuery(e).detach().html();
+                var active = i==0?'active':'';
+                jQuery('<div class="content '+active+'" id="addon'+i+'"></div>').html(content).appendTo('#addon-tabs-content')
+                jQuery('<dd class="'+active+'"><a href="#addon'+i+'">'+title+'</a></dd>').appendTo('#addon-tabs');
+            }
         });
         //http://osvaldas.info/elegant-css-and-jquery-tooltip-responsive-mobile-friendly
         var targets = jQuery( '[rel~=tooltip]' ),
@@ -298,7 +327,7 @@ class WoocommerceAddonTooltip {
         var product_addons_tooltips  = JSON.parse(<?php echo json_encode(json_encode($product_addons_tooltips,JSON_HEX_APOS))?> );
         jQuery('.woocommerce_product_addon').each(function(i,e){
             var tooltips = '';
-            product_addons_tooltips.every(function(ele){
+            jQuery.each(product_addons_tooltips,function(ii,ele){
                 if(ele.position == i){
                     tooltips = ele.options;
                     return false;
